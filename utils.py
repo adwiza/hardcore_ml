@@ -98,3 +98,27 @@ def average_precision(ys_true: torch.Tensor, ys_pred: torch.Tensor) -> float:
         return 0
     else:
         return rolling_sum / num_correct_ans
+    
+import math
+import pickle
+import random
+from typing import List, Tuple
+
+import numpy as np
+import torch
+from catboost.datasets import msrank_10k
+from sklearn.preprocessing import StandardScaler
+from sklearn.tree import DecisionTreeRegressor
+from tqdm.auto import tqdm
+
+
+def compute_ideal_dcg(ys_true: torch.FloatTensor) -> float:
+    def dcg(ys_true, ys_pred):
+        _, argsort = torch.sort(ys_pred, descending=True, dim=0)
+        ys_true_sorted = ys_true[argsort]
+        ret = 0
+        for i, l in enumerate(ys_true_sorted, 1):
+            ret += (2 ** l - 1) / np.log2(1 + i)
+        return ret
+    ideal_dcg = dcg(ys_true, ys_true)
+    return ideal_dcg
